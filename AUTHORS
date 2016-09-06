@@ -1,9 +1,12 @@
-Evan Roman
+Ara Hayrabedian
 
 Based on works by:
 
+wtforms-recaptcha:
 Artem Gluvchynsky <excieve@gmail.com>
 Juarez Bochi
 Vincent Castellano
 Sean Vieira
 
+wtforms-nocaptcha
+Evan Roman
