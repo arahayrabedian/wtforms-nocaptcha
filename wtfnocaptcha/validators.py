@@ -1,4 +1,6 @@
 import logging
+import json
+
 try:
     from urllib.request import ProxyHandler, urlopen, build_opener, \
         install_opener
@@ -42,7 +44,7 @@ class NoCaptcha(object):
         try:
             response = urlopen('https://www.google.com/recaptcha/api/siteverify',
                                data=urlencode(params).encode('utf-8'))
-            data = response.read().decode('utf-8').splitlines()
+            data = response.read().decode('utf-8')
             response.close()
         except Exception as e:
             logger.error(str(e))
@@ -57,17 +59,20 @@ class NoCaptcha(object):
             raise ValidationError(field.gettext(self.empty_error_text))
 
         # Construct params assuming all the data is present
-        params = (('privatekey', field.private_key),
+        params = (('secret', field.private_key),
                   ('remoteip', field.ip_address),
-                  ('challenge', field.challenge),
                   ('response', field.data))
 
-        data = self._call_verify(params, field.http_proxy)
-        if data[0] == 'false':
+        data = json.loads(self._call_verify(params, field.http_proxy))
+        # sample bad response: {'error-codes': ['invalid-input-response', 'missing-input-secret'], 'success': False}
+        if not data['success']:
             # Show only incorrect solution to the user else show default message
-            if data[1] == 'incorrect-captcha-sol':
-                raise ValidationError(field.gettext(self.errors[data[1]]))
+            error_list = data['error-codes']
+            if 'incorrect-captcha-sol' in error_list:
+                raise ValidationError(field.gettext('incorrect-captcha-sol'))
             else:
                 # Log error message in case it wasn't triggered by user
-                logger.error(self.errors.get(data[1], data[1]))
-                raise ValidationError(field.gettext(self.internal_error_text))
+                logger.error('nocaptcha response errors: %s' % str(error_list))
+                # put together a string of errors
+                ", ".join([field.gettext(error_code) for error_code in error_list])
+                raise ValidationError(field.gettext(error))
