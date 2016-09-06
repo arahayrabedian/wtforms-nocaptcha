@@ -52,6 +52,7 @@ class NoCaptcha(object):
 
     def __call__(self, form, field):
         # Captcha challenge response is required
+        import ipdb; ipdb.set_trace()
         if not field.data:
             raise ValidationError(field.gettext(self.empty_error_text))
 
