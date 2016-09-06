@@ -57,14 +57,14 @@ class NoCaptchaField(Field):
             try:
                 # These fields are coming from the outside so keep them
                 # inside the usual process
-                challenge = formdata.getlist('recaptcha_challenge_field')
+                challenge = formdata.getlist('g-recaptcha-response')
                 if not challenge:
                     raise ValueError(self.gettext(
                         u'Challenge data is required.'))
                 self.challenge = challenge[0]
 
                 # Pass user input as the raw_data
-                self.raw_data = formdata.getlist('recaptcha_response_field')
+                self.raw_data = formdata.getlist('g-recaptcha-response')
                 self.process_formdata(self.raw_data)
             except ValueError as e:
                 self.process_errors.append(e.args[0])

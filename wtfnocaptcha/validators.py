@@ -1,4 +1,6 @@
 import logging
+import json
+
 try:
     from urllib.request import ProxyHandler, urlopen, build_opener, \
         install_opener
@@ -19,13 +21,11 @@ class NoCaptcha(object):
 
     # Mapping of response error codes
     errors = {
-        'invalid-site-public-key': u'Invalid public key',
-        'invalid-site-private-key': u'Invalid private key',
-        'invalid-request-cookie': u'Challenge is incorrect',
-        'incorrect-captcha-sol': u'Incorrect captcha solution',
-        'verify-params-incorrect': u'Incorrect parameters',
-        'invalid-referrer': u'Incorrect domain',
-        'recaptcha-not-reachable': u'Could not connect to reCaptcha'
+        'missing-input-secret': 'The secret parameter is missing.',
+        'invalid-input-secret':	'The secret parameter is invalid or malformed.',
+        'missing-input-response': 'The response parameter is missing.',
+        'invalid-input-response': 'The response parameter is invalid or malformed.',
+        'nocaptcha-not-reachable': 'Could not connect to nocaptcha api',
     }
 
     empty_error_text = u'This field is required'
@@ -40,13 +40,13 @@ class NoCaptcha(object):
             install_opener(opener)
 
         try:
-            response = urlopen('http://www.google.com/recaptcha/api/verify',
+            response = urlopen('https://www.google.com/recaptcha/api/siteverify',
                                data=urlencode(params).encode('utf-8'))
-            data = response.read().decode('utf-8').splitlines()
+            data = response.read().decode('utf-8')
             response.close()
         except Exception as e:
             logger.error(str(e))
-            raise ValidationError(self.errors['recaptcha-not-reachable'])
+            raise ValidationError(self.errors['nocaptcha-not-reachable'])
 
         return data
 
@@ -56,17 +56,20 @@ class NoCaptcha(object):
             raise ValidationError(field.gettext(self.empty_error_text))
 
         # Construct params assuming all the data is present
-        params = (('privatekey', field.private_key),
+        params = (('secret', field.private_key),
                   ('remoteip', field.ip_address),
-                  ('challenge', field.challenge),
                   ('response', field.data))
 
-        data = self._call_verify(params, field.http_proxy)
-        if data[0] == 'false':
+        data = json.loads(self._call_verify(params, field.http_proxy))
+        # sample bad response: {'error-codes': ['invalid-input-response', 'missing-input-secret'], 'success': False}
+        if not data['success']:
             # Show only incorrect solution to the user else show default message
-            if data[1] == 'incorrect-captcha-sol':
-                raise ValidationError(field.gettext(self.errors[data[1]]))
-            else:
-                # Log error message in case it wasn't triggered by user
-                logger.error(self.errors.get(data[1], data[1]))
-                raise ValidationError(field.gettext(self.internal_error_text))
+            error_list = data['error-codes']
+
+            # Log error message in case it wasn't triggered by user
+            logger.error('nocaptcha response errors: %s' % str(error_list))
+
+            # put together a string of errors
+            error_text = "\n".join([self.errors[error_code] for error_code in error_list])
+
+            raise ValidationError(field.gettext(error_text))
