@@ -40,7 +40,7 @@ class NoCaptcha(object):
             install_opener(opener)
 
         try:
-            response = urlopen('http://www.google.com/recaptcha/api/verify',
+            response = urlopen('https://www.google.com/recaptcha/api/siteverify',
                                data=urlencode(params).encode('utf-8'))
             data = response.read().decode('utf-8').splitlines()
             response.close()
