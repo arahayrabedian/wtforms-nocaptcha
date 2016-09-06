@@ -71,6 +71,6 @@ class NoCaptcha(object):
             logger.error('nocaptcha response errors: %s' % str(error_list))
 
             # put together a string of errors
-            error_text = "\n".join([field.gettext(error_code) for error_code in error_list])
+            error_text = "\n".join(errors[error_code] for error_code in error_list])
 
             raise ValidationError(field.gettext(error_text))
