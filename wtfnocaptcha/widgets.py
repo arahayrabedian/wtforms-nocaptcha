@@ -1,8 +1,9 @@
 from wtforms.widgets import HTMLString
 
 # Template for the widget
-NOCAPTCHA_HTML = HTMLString(u"""<script type="text/javascript"
- src="%(protocol)s://www.google.com/recaptcha/api.js?hl=en'></script>">
+NOCAPTCHA_HTML = HTMLString("""
+<script type="text/javascript"
+ src="%(protocol)s://www.google.com/recaptcha/api.js?hl=en">
 </script>
 <div class="g-recaptcha" data-sitekey="%(public_key)s">
 </div>
