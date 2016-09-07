@@ -7,14 +7,6 @@ Overview
 wtforms-nocaptcha is a convenient field for `WTForms <http://wtforms.simplecodes.com/>`_ that transparently handles
 Google's No Captcha reCaptcha display and validation via corresponding widget and validator classes.
 
-
-Installation
-------------
-Get the distribution::
-
-  pip install wtforms-nocaptcha
-
-
 Usage
 -----
 It is mostly the usual WTForms field that needs some extra data and parameters.
@@ -46,7 +38,7 @@ Some description of field's parameters:
 :http_proxy:
     URL of HTTP proxy for API calls
 
-When form with RecaptchaField is instantiated with bound fields, it must include
+When form with NocaptchaField is instantiated with bound fields, it must include
 *captcha* keyword parameter with dict that has 'ip_address' element.
 
 
